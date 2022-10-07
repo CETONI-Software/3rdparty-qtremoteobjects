@@ -1,6 +1,7 @@
-TARGET = QtRemoteObjects
-MODULE = remoteobjects
-MODULE_CONFIG = remoteobjects_repc
+TARGET = QtRemoteObjects_CETONI
+TEMPLATE = lib
+# MODULE = remoteobjects
+# MODULE_CONFIG = remoteobjects_repc
 QT += network core-private
 QT -= gui
 
@@ -12,7 +13,7 @@ OTHER_FILES += \
     $$PWD/doc/src/remoteobjects-overview.qdoc \
     $$PWD/doc/src/remoteobjects-repc.qdoc \
 
-load(qt_module)
+# load(qt_module)
 
 DEFINES += QT_NO_CAST_TO_ASCII QT_NO_CAST_FROM_ASCII QT_NO_CAST_FROM_BYTEARRAY QT_NO_URL_CAST_FROM_STRING
 
