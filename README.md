@@ -4,12 +4,13 @@ This is a fork of the Qt Remote Objects library.
 
 https://doc.qt.io/qt-5/qtremoteobjects-index.html
 
-The intention of this fork is to modify the library in a way, that it is possible to enable remoting for existing QObject based classes. 
+The intention of this fork is to modify the library in a way, that it is possible to
+enable remoting for existing QObject based classes. 
 
-Currently only
-the properties a derived class are exposed but not the properties of the base class. That means, in the following hierarchy, if remoting is enabled for the
-Derived class, only the properties of this class are exposed but not the
-properties of the base class:
+Currently only the properties of a derived class are exposed but not the properties
+of the base class. That means, in the following hierarchy, if remoting is
+enabled for the `Derived` class, only the properties of this class are exposed
+but not the properties of the `Base` class:
 
                       +---------------------+
                       |       QObject       |
@@ -25,7 +26,7 @@ properties of the base class:
                       |       Derived       |
                       +---------------------+
 
-I found an explanation in the Qt mailing list:
+This design is by intention. I found an explanation in the Qt mailing list:
 
 https://www.mail-archive.com/interest@qt-project.org/msg34040.html
 
