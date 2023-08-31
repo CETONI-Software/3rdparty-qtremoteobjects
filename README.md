@@ -47,4 +47,4 @@ Qt 5.15.2
 - execute `make release`
 
 The modified library builds a `QtRemoteObjects_CETONI.dll`. Copy this DLL to your libs folder on then copy the `remoteobjects` folder to your `include`
-directory.
+directory and rename it to `QtRemoteObjects_CETONI`.
