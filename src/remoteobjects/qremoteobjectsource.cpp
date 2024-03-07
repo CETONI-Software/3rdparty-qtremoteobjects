@@ -50,6 +50,8 @@
 #include <QtCore/qvarlengtharray.h>
 #include <QtCore/qabstractitemmodel.h>
 
+#include <QWidget>
+
 #include <algorithm>
 #include <iterator>
 
@@ -449,11 +451,26 @@ DynamicApiMap::DynamicApiMap(QObject *object, const QMetaObject *metaObject, con
       m_metaObject(metaObject),
       m_cachedMetamethodIndex(-1)
 {
-	m_enumOffset = QObject::staticMetaObject.enumeratorCount();
-    m_enumCount = metaObject->enumeratorCount() - m_enumOffset;
+	if (object)
+	{
+		m_enumOffset = QObject::staticMetaObject.enumeratorCount();
+	}
+	else
+	{
+		m_enumOffset = metaObject->enumeratorOffset();
+	}
+	m_enumCount = metaObject->enumeratorCount() - m_enumOffset;
 
     const int propCount = metaObject->propertyCount();
-    const int propOffset = QObject::staticMetaObject.propertyCount();
+    int propOffset;
+	if (object)
+	{
+		propOffset = QObject::staticMetaObject.propertyCount();
+	}
+	else
+	{
+		propOffset = metaObject->propertyOffset();
+	}
     m_properties.reserve(propCount-propOffset);
     int i = 0;
     for (i = propOffset; i < propCount; ++i) {
@@ -498,7 +515,15 @@ DynamicApiMap::DynamicApiMap(QObject *object, const QMetaObject *metaObject, con
         }
     }
     const int methodCount = metaObject->methodCount();
-    const int methodOffset = QObject::staticMetaObject.methodCount();
+    int methodOffset;
+    if (object)
+    {
+    	methodOffset = QObject::staticMetaObject.methodCount();
+    }
+    else
+    {
+    	methodOffset = metaObject->methodOffset();
+    }
     for (i = methodOffset; i < methodCount; ++i) {
         const QMetaMethod mm = metaObject->method(i);
         const QMetaMethod::MethodType m = mm.methodType();

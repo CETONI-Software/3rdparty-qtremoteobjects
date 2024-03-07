@@ -2,7 +2,7 @@ TARGET = QtRemoteObjects_CETONI
 TEMPLATE = lib
 # MODULE = remoteobjects
 # MODULE_CONFIG = remoteobjects_repc
-QT += network core-private
+QT += network core-private widgets
 QT -= gui
 
 QMAKE_DOCS = $$PWD/doc/qtremoteobjects.qdocconf
