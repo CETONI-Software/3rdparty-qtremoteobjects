@@ -33,6 +33,13 @@ https://www.mail-archive.com/interest@qt-project.org/msg34040.html
 In the fork the `DynamicApiClass` is modified to expose all properties except
 the properties of the base QObject class.
 
+## Additional notes from 2024/03/13
+
+Modifying the `DynamicApiClass` is not sufficient to achieve the desired result.
+Because the internal indexes for signals used in qt_metacall function have
+a different offset. So the current state is, that it is partly working but
+that the update of properties via notify signals does not work yet.
+
 ## Requirements
 
 Qt 5.15.2

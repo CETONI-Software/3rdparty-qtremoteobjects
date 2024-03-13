@@ -319,6 +319,7 @@ QVariantList* QRemoteObjectSourceBase::marshalArgs(int index, void **a)
 
 bool QRemoteObjectSourceBase::invoke(QMetaObject::Call c, int index, const QVariantList &args, QVariant* returnValue)
 {
+	qDebug() << "QRemoteObjectSourceBase::invoke";
     int status = -1;
     int flags = 0;
     bool forAdapter = (c == QMetaObject::InvokeMetaMethod ? m_api->isAdapterMethod(index) : m_api->isAdapterProperty(index));
@@ -453,10 +454,13 @@ DynamicApiMap::DynamicApiMap(QObject *object, const QMetaObject *metaObject, con
 {
 	if (object)
 	{
+		qDebug() << "DynamicApiMap: object is not null " << object->metaObject()->className();
+		qDebug() << "metaObject->className() " << metaObject->className();
 		m_enumOffset = QObject::staticMetaObject.enumeratorCount();
 	}
 	else
 	{
+		qDebug() << "DynamicApiMap: object is null " << metaObject->className();
 		m_enumOffset = metaObject->enumeratorOffset();
 	}
 	m_enumCount = metaObject->enumeratorCount() - m_enumOffset;
@@ -471,12 +475,18 @@ DynamicApiMap::DynamicApiMap(QObject *object, const QMetaObject *metaObject, con
 	{
 		propOffset = metaObject->propertyOffset();
 	}
+    qDebug() << "propOffset: " << propOffset << " propCount: " << propCount;
+    qDebug() << "metaObject->propertyOffset() " << metaObject->propertyOffset();
     m_properties.reserve(propCount-propOffset);
     int i = 0;
     for (i = propOffset; i < propCount; ++i) {
         const QMetaProperty property = metaObject->property(i);
-        if (property.userType() >= QMetaType::User) 
+        qDebug() << "property: " << property.name() << " index " << i << " type: " << property.typeName() << " user type: " << property.userType();
+        if ((property.userType() >= QMetaType::User || property.userType() == QMetaType::UnknownType) && (property.userType() != qMetaTypeId<QRemoteObjectSourceLocations>()))
+        {   
+            qDebug() << "property.userType() >= QMetaType::User - continue: " << QMetaType::User;
             continue; //We don't want to replicate unknown user types
+        }
 
         if (QMetaType::typeFlags(property.userType()).testFlag(QMetaType::PointerToQObject)) {
             auto propertyMeta = QMetaType::metaObjectForType(property.userType());
@@ -504,6 +514,7 @@ DynamicApiMap::DynamicApiMap(QObject *object, const QMetaObject *metaObject, con
                         typeName.chop(6);
                 }
 
+                qDebug()  << "m_subclasses << new DynamicApiMap";
                 m_subclasses << new DynamicApiMap(child, meta, QString::fromLatin1(property.name()), typeName);
             }
         }
@@ -512,6 +523,7 @@ DynamicApiMap::DynamicApiMap(QObject *object, const QMetaObject *metaObject, con
         if (notifyIndex != -1) {
             m_signals << notifyIndex;
             m_propertyAssociatedWithSignal.append(i-propOffset);
+            qDebug() << "notifySignalIndex: " << notifyIndex;
             //The starting values of _signals will be the notify signals
             //So if we are processing _signal with index i, api->sourcePropertyIndex(_propertyAssociatedWithSignal.at(i))
             //will be the property that changed.  This is only valid if i < _propertyAssociatedWithSignal.size().
@@ -527,32 +539,42 @@ DynamicApiMap::DynamicApiMap(QObject *object, const QMetaObject *metaObject, con
     {
     	methodOffset = metaObject->methodOffset();
     }
+    qDebug() << "methodOffset: " << methodOffset << " methodCount: " << methodCount;
+    qDebug() << "metaObject->methodOffset() " << metaObject->methodOffset();
     for (i = methodOffset; i < methodCount; ++i) {
         const QMetaMethod mm = metaObject->method(i);
         const QMetaMethod::MethodType m = mm.methodType();
         for (int i = 0; i < mm.parameterCount(); ++i) {
-            if (mm.parameterType(i) >= QMetaType::User) {
+            if (mm.parameterType(i) >= QMetaType::User || mm.parameterType(i) == QMetaType::UnknownType) {
                 //qCWarning(QT_REMOTEOBJECT) << "QRemoteObjectSource: Cannot replicate method" << mm.name() << "with unknown user type";
+                qDebug() << "QRemoteObjectSource: Cannot replicate method" << mm.name() << "with unknown user type " << mm.parameterType(i);
                 continue;
             }
         }
 
         if (m == QMetaMethod::Signal) {
+            qDebug() << "signal: " << mm.name() << " index: " << i;
             if (m_signals.indexOf(i) >= 0) //Already added as a property notifier
                 continue;
             m_signals << i;
         } 
         else if (m == QMetaMethod::Slot || m == QMetaMethod::Method)
         {
-            // We don't want to replicate unknown user types
-            if (mm.returnType() < QMetaType::User)
+            //We don't want to replicate unknown user types
+            qDebug() << "method: " << mm.name() << " index: " << i;
+            if (mm.returnType() < QMetaType::User && mm.returnType() > QMetaType::UnknownType)
             {
                 m_methods << i;
+            }
+            else
+            {
+                qDebug() << "QRemoteObjectSource: Cannot replicate method" << mm.name() << "with unknown user type " << mm.typeName();
             }
         }
     }
 
     m_objectSignature = QtPrivate::qtro_classinfo_signature(metaObject);
+    qDebug() << "Property count: " << m_properties.count();
 }
 
 QList<QByteArray> DynamicApiMap::signalParameterNames(int index) const

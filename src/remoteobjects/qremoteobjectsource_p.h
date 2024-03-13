@@ -178,14 +178,18 @@ public:
 
     int propertyIndexFromSignal(int index) const override
     {
+    	qDebug() << "propertyIndexFromSignal " << index;
         if (index >= 0 && index < m_propertyAssociatedWithSignal.size())
             return m_properties.at(m_propertyAssociatedWithSignal.at(index));
+        qDebug() << "return -1";
         return -1;
     }
     int propertyRawIndexFromSignal(int index) const override
     {
+    	qDebug() << "propertyRawIndexFromSignal " << index;
         if (index >= 0 && index < m_propertyAssociatedWithSignal.size())
             return m_propertyAssociatedWithSignal.at(index);
+        qDebug() << "return -1";
         return -1;
     }
     QByteArray objectSignature() const override { return m_objectSignature; }
