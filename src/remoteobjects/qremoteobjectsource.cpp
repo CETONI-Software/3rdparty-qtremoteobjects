@@ -475,6 +475,9 @@ DynamicApiMap::DynamicApiMap(QObject *object, const QMetaObject *metaObject, con
     int i = 0;
     for (i = propOffset; i < propCount; ++i) {
         const QMetaProperty property = metaObject->property(i);
+        if (property.userType() >= QMetaType::User) 
+            continue; //We don't want to replicate unknown user types
+
         if (QMetaType::typeFlags(property.userType()).testFlag(QMetaType::PointerToQObject)) {
             auto propertyMeta = QMetaType::metaObjectForType(property.userType());
             QObject *child = property.read(object).value<QObject *>();
@@ -527,12 +530,26 @@ DynamicApiMap::DynamicApiMap(QObject *object, const QMetaObject *metaObject, con
     for (i = methodOffset; i < methodCount; ++i) {
         const QMetaMethod mm = metaObject->method(i);
         const QMetaMethod::MethodType m = mm.methodType();
+        for (int i = 0; i < mm.parameterCount(); ++i) {
+            if (mm.parameterType(i) >= QMetaType::User) {
+                //qCWarning(QT_REMOTEOBJECT) << "QRemoteObjectSource: Cannot replicate method" << mm.name() << "with unknown user type";
+                continue;
+            }
+        }
+
         if (m == QMetaMethod::Signal) {
             if (m_signals.indexOf(i) >= 0) //Already added as a property notifier
                 continue;
             m_signals << i;
-        } else if (m == QMetaMethod::Slot || m == QMetaMethod::Method)
-            m_methods << i;
+        } 
+        else if (m == QMetaMethod::Slot || m == QMetaMethod::Method)
+        {
+            // We don't want to replicate unknown user types
+            if (mm.returnType() < QMetaType::User)
+            {
+                m_methods << i;
+            }
+        }
     }
 
     m_objectSignature = QtPrivate::qtro_classinfo_signature(metaObject);
